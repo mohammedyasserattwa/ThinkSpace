@@ -8,22 +8,29 @@ import { ElementRef, useRef, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import TextareaAutosize from "react-textarea-autosize";
-import { removeIcon } from "@/convex/documents";
-import { on } from "events";
+// import { removeIcon } from "@/convex/documents";
+// import { on } from "events";
 import { useCoverImage } from "@/hooks/use-cover-image";
+import { AIGenerateModal } from "@/components/modals/ai-generate-modal";
+
 
 interface ToolbarProps {
+    onAIChange: (value: string) => void;
     initialData: Doc<"documents">;
     preview?: boolean;
+    content: string;
 }
 
 export const Toolbar = ({
+    onAIChange,
     initialData,
-    preview
+    preview,
+    content
 }: ToolbarProps) => {
     const inputRef = useRef<ElementRef<"textarea">>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [value, setValue] = useState(initialData.title);
+
 
 
     const update = useMutation(api.documents.update);
@@ -69,59 +76,86 @@ export const Toolbar = ({
         })
     }
 
-    return (
-        <div className="pl-[54px] group relative">
-            {!!initialData.icon && !preview && (
-                <div className="flex items-center gap-x-2 group/icon pt-6">
-                    <IconPicker onChange = {onIconSelect}>
-                        <p className="text-6xl hover:opacity-75 transition">
-                            {initialData?.icon}
-                        </p>
-                    </IconPicker>
-                    <Button onClick={onRemoveIcon} className="rounded-full opacity-0 group-hover/icon:opacity-100 transition text-muted-foreground text-xs" variant={"outline"} size={"icon"}>
-                        <X className="h-4 w-4" />
-                    </Button>
-                </div>
-            )}
-            {!!initialData.icon && preview && (
-                <p className="text-6xl pt-6">
-                    {initialData.icon}
-                </p>
-            )}
-            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-x-1 py-4">
-                {!initialData.icon && !preview && (
-                    <IconPicker asChild onChange={onIconSelect}>
-                        <Button
-                        className="text-muted-foreground text-xs"
-                        variant={"outline"}
-                        size = {"sm"}
-                        >
-                            <Smile className="h-4 w-4 mr-2" />
-                            Add Icon
-                        </Button>
+    const handleAIGenerate = (text: string) => {
+        onAIChange(text);
+    };
 
-                    </IconPicker>
-                )}
-                {!initialData.coverImage && !preview && (
-                    <Button className="text-muted-foreground text-xs" variant={"outline"} size={"sm"} onClick={coverImage.onOpen}>
-                        <ImageIcon className="h-4 w-4 mr-2" />
-                        Add Cover Image
-                    </Button>
-                )}
-            </div>
-            {isEditing && !preview ? (
-                <TextareaAutosize
-                 ref = {inputRef}
-                 onBlur={disableInputs}
-                 onKeyDown={onKeyDown}
-                 value={value}
-                 onChange={(e) => onInput(e.target.value)}
-                 className="text-5xl bg-transparent font-bold break-words outline-none text-[#3F3F3F] dark:text-[#cfcfcf] resize-none"
-                />
-            ): (
-                <div className="pd-[11.5px] text-5xl font-bold break-words text-[#3F3F3F] dark:text-[#cfcfcf]" onClick={enableInputs}>{initialData.title}</div>
-            )} 
+    return (
+      <div className="pl-[54px] group relative">
+        <div className="opacity-100  flex items-center gap-x-1 py-4">
+          {!!initialData.icon && !preview && (
+            <>
+              <IconPicker onChange={onIconSelect}>
+                <Button
+                  className="text-muted-foreground text-xs"
+                  variant={"outline"}
+                  size={"sm"}
+                >
+                  {initialData.icon}
+                  <div>&nbsp;</div>
+                  Edit Icon
+                </Button>
+              </IconPicker>
+
+              <Button
+                onClick={onRemoveIcon}
+                className="text-muted-foreground text-xs"
+                variant={"outline"}
+                size={"sm"}
+              >
+                <X className="h-4 w-4" />
+                Remove Icon
+              </Button>
+            </>
+          )}
+          {!initialData.icon && !preview && (
+            <IconPicker asChild onChange={onIconSelect}>
+              <Button
+                className="text-muted-foreground text-xs"
+                variant={"outline"}
+                size={"sm"}
+              >
+                <Smile className="h-4 w-4 mr-2" />
+                Add Icon
+              </Button>
+            </IconPicker>
+          )}
+          {!preview && <AIGenerateModal onGenerate={handleAIGenerate} />}
+          {!initialData.coverImage && !preview && (
+            <Button
+              className="text-muted-foreground text-xs"
+              variant={"outline"}
+              size={"sm"}
+              onClick={coverImage.onOpen}
+            >
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Add Cover Image
+            </Button>
+          )}
         </div>
-    )
+        {isEditing && !preview ? (
+          <TextareaAutosize
+            ref={inputRef}
+            onBlur={disableInputs}
+            onKeyDown={onKeyDown}
+            value={value}
+            onChange={(e) => onInput(e.target.value)}
+            className="text-5xl bg-transparent font-bold break-words outline-none text-[#3F3F3F] dark:text-[#cfcfcf] resize-none"
+          />
+        ) : (
+          <div className="flex justify-start items-center align-center mb-[10px]">
+            <p className="text-6xl hover:opacity-75 transition">
+              {initialData?.icon}
+            </p>
+            <div
+              className="pd-[11.5px] text-5xl font-bold break-words text-[#3F3F3F] dark:text-[#cfcfcf]"
+              onClick={enableInputs}
+            >
+              {initialData.title}
+            </div>
+          </div>
+        )}
+      </div>
+    );
 
 }

@@ -12,16 +12,26 @@ import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 
 const DocumentIdPage = () => {
     const Editor = useMemo(() => dynamic(() => import("@/components/editor"),{ssr : false}),[])
+    
     const params = useParams();
 
     const document = useQuery(api.documents.getById, {
         id: params.documentId  as Id<"documents">
     })
+
+    const [content, setContent] = useState("");
+
+    useEffect(() => {
+        if(document){
+            setContent(document.content || "")
+        }
+    }, [document])
+
 
     const update = useMutation(api.documents.update)
 
@@ -30,6 +40,7 @@ const DocumentIdPage = () => {
             id: params.documentId as Id<"documents">,
             content
         })
+        setContent(content);
     }
 
     if(document === undefined){
@@ -56,20 +67,19 @@ const DocumentIdPage = () => {
         )
     }
 
-    return ( <div className="pb-40">
-        <Cover
-        preview
-            url = {document.coverImage}
-        />
+    return (
+      <div className="pb-40">
+        <Cover preview url={document.coverImage} />
         <div className="md:max-w-3xl lg:max-w-4xl mx-auto">
-            <Toolbar preview initialData = {document} />
-            <Editor
-                editable = {false} 
-                onChange = {onChange}
-                initialContent = {document.content}
-            />
+          <Toolbar preview initialData={document} content={content} onAIChange={onChange} />
+          <Editor
+            editable={false}
+            onChange={onChange}
+            initialContent={content}
+          />
         </div>
-    </div> );
+      </div>
+    );
 }
  
 export default DocumentIdPage;
