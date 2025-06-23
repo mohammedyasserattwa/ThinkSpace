@@ -10,8 +10,4 @@ This is a web application similar to Notion, designed to help you organize your 
 
 
 
-## Usage
 
-Once the code is published, you can access the application at the following link:
-
-[Application Link](#)
